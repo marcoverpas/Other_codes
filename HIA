@@ -1,0 +1,85 @@
+###############################################################################
+#                                                                             #
+# Toy model simulating results of fig. 2.4                                    #
+# in Economics with Heterogeneous Interacting Agents                          #
+# by Alessandro Caiani, Alberto Russo, Antonio Palestrini and Mauro Gallegati #
+# chapter 2.2, figure 2.4.                                                    #
+#                                                                             #
+# Created by Marco Veronese Passarella, April 8, 2019                         #
+#                                                                             #
+###############################################################################
+
+his code replicates results in the book Economics with Heterogeneous Interacting Agents, by Alessandro Caiani, Alberto Russo, Antonio Palestrini and Mauro Gallegati, 
+
+
+#Set time span and number of firms
+Time <- 1000    # Number of simulation periods
+Ni <- 100    # Number of firms
+
+#Parameters setting
+gamma <- 2  # Fraction of reinvested profit
+phi <- 0.1	  # Product per unit of capital
+Pbar <- 0.01  # Random price drift
+delta <- 0.05 # Depreciation rate
+rbar <- 0.075	    # Interest rate
+
+#Set the seed for pseudo-random number generator
+set.seed(15)
+
+#Allocating variables / initial conditions
+
+#Individual variables
+A <- matrix(data=1,ncol=1,nrow=Ni) 		 # Net worth
+K <- matrix(data=1,ncol=1,nrow=Ni) 		 # Capital
+B <- matrix(data=0,ncol=1,nrow=Ni) 		 # Debt
+I <- matrix(data=0,ncol=1,nrow=Ni) 		 # Investment
+P <- matrix(data=0,ncol=1,nrow=Ni) 		 # Price
+Y <- matrix(data=0,ncol=1,nrow=Ni) 		 # Output
+Z <- matrix(2*runif(Ni)+Pbar,ncol=1,nrow=Ni) # Profit
+
+#Aggregate variables
+YY <- matrix(data=0,ncol=1,nrow=Time)      # Aggregate output
+AA <- matrix(data=sum(A),ncol=1,nrow=Time) # Aggregate net worth 
+BB <- matrix(data=0,ncol=1,nrow=Time)      # Aggregate debt
+LEV <- matrix(data=0,ncol=1,nrow=Time) 		 # Leverage ratio
+r <- matrix(data=0,ncol=1,nrow=Ni) 		 # Interest rate
+
+# Main program 
+for (t in 2:Time) {
+	
+  I <- gamma * Z # Investment
+	I[I<0] = 0; #Non-negative condition for investment
+  K <- (1 - delta) * K + I # Capital accumulation
+  Y <- phi * K # Production (output)
+  B <- K - A # Debt stock
+  B[B<0] <- 0 # Self-financed firms	
+  P <- 2*runif(Ni)+ Pbar # Stochastic price
+  r <- rbar + rbar*(B/A)^rbar # Interest rate
+  Z <- P * Y - r * K # Profit
+  A <- A + Z # Net worth
+  Z[A<0] <- 0 # Entry condition
+  K[A<0] <- 1 # Entry condition
+  A[A<0] <- 1 # Entry-exit process
+  YY[t] <- sum(Y) # Aggregate production (output)
+  AA[t] <- sum(A) # Aggregate net worth
+  BB[t] <- sum(B) # Aggregate debt
+  LEV[t] <- BB[t]/AA[t] # Average leverage ratio
+  
+}
+
+
+#Create matrix for multiple plot
+layout(matrix(c(1, 3, 2, 4), 2, 2))
+layout.show(4)
+
+# Plot aggregate output
+plot(201:Time, log(YY[201:Time,1]),type="l",ylim=range(log(YY[201:Time])),col=1,ylab="log(YY)",xlab="t")
+
+#Plot aggregate debt
+plot(201:Time, LEV[201:Time,1],type="l",ylim=range(LEV[201:Time]),col=1,ylab="leverage",xlab="t")
+
+#Plot average leverage ratio
+plot(201:Time, log(AA[201:Time,1]),type="l",ylim=range(log(AA[201:Time])),col=1,ylab="log(AA)",xlab="t")
+
+#Plot average interest rate
+plot(201:Time, log(BB[201:Time,1]),type="l",ylim=range(log(BB[201:Time])),col=1,ylab="log(BB)",xlab="t")
