@@ -1,4 +1,4 @@
-# Other_codes
+# Other_codes (miscellaneous)
 
 A collection of `R`, `Python`, and `EViews` codes for modeling.
 
