@@ -1,0 +1,100 @@
+#Solow Model
+
+#Made by Marco Veronese Passarella, 27th February 2020
+
+
+############################################################################
+
+#STEP 1: Clear the workspace
+
+#Clear all
+rm(list=ls(all=TRUE))
+
+############################################################################
+
+#STEP 2: Define the number of periods and scenarios
+
+#Number of periods
+nPeriods = 200
+
+#Number of scenarios
+nScenarios=3 
+
+
+############################################################################
+
+#STEP 3: 
+
+#Variables
+Y=matrix(data=0,nrow=nScenarios,ncol=nPeriods)              #Output (income)
+C=matrix(data=0,nrow=nScenarios,ncol=nPeriods)              #Consumption
+I=matrix(data=0,nrow=nScenarios,ncol=nPeriods)              #Investment
+S=matrix(data=0,nrow=nScenarios,ncol=nPeriods)              #Saving
+K=matrix(data=2.5,nrow=nScenarios,ncol=nPeriods)            #Capital stock
+L=matrix(data=2.5,nrow=nScenarios,ncol=nPeriods)            #Labour force 
+alpha=matrix(data=4,nrow=nScenarios,ncol=nPeriods)          #Technical progress coefficient
+c1=matrix(data=0.8,nrow=nScenarios,ncol=nPeriods)           #Propensity to consume out of income
+
+############################################################################
+
+#STEP 4: Set values for parameters and exogenous variables 
+beta=0.5                                                    #Output elasticity of labour  
+delta = 0.1                                                 #Capital depreciation rate
+
+############################################################################
+
+# STEP 5: MODEL AND ITERATIONS
+
+#Select scenarios
+for (j in 1:nScenarios){
+  
+  #Define the time loop
+  for (i in 2:nPeriods){
+    
+    #Define iterations
+    for (iterations in 1:100){
+      
+      #Technical progress 
+      if (i>=1 && j==2){
+        alpha[2,i]=4.2
+      }
+      
+      #Higher saving 
+      if (i>=1 && j==3){
+        c1[3,i]=0.79
+      }
+      
+      #MODEL EQUATIONS      
+      C[j,i] = c1[j,i]*Y[j,i-1]                               #1) Consumption
+      S[j,i] = Y[j,i-1] - C[j,i]                              #2) Saving
+      I[j,i] = S[j,i] - delta*K[j,i-1]                        #3) Net investment
+      K[j,i] = K[j,i-1] + I[j,i]                              #4) Capital stock 
+      Y[j,i] = alpha[j,i]*(L[j,i]^beta)*(K[j,i]^(1-beta))     #5) Output
+      
+    }
+  }
+}
+
+############################################################################
+
+# STEP 6: PLOT RESULTS
+
+#Output with higher saving rate
+plot(Y[1,2:nPeriods], type="l", lty = 1, lwd = 2, col="purple", font.main=1,cex.main=1,main="a) Output: higher saving rate",ylab = '£',xlab = '', ylim = range(0,100),cex.axis=0.75,cex.lab=1)
+lines(Y[3,2:nPeriods], type="l", lty = 2, lwd = 2, col=4)
+legend("right",c("Baseline","Higher saving"),  bty = "n", cex = 1, lty=c(1,2), lwd=c(2,2), col = c("purple",4), box.lty=0)
+
+#Capital stock with higher saving rate
+plot(K[1,2:nPeriods], type="l", lty = 1, lwd = 2, col=3, font.main=1,cex.main=1,main="b) Capital stock: higher saving rate",ylab = '£',xlab = '', ylim = range(0,200),cex.axis=0.75,cex.lab=1)
+lines(K[3,2:nPeriods], type="l", lty = 2, lwd = 2, col=8)
+legend("right",c("Baseline","Higher saving"),  bty = "n", cex = 1, lty=c(1,2), lwd=c(2,2), col = c(3,8), box.lty=0)
+
+#Output with technical progress
+plot(Y[1,2:nPeriods], type="l", lty = 1, lwd = 2, col="purple", font.main=1,cex.main=1,main="c) Output: technical progress",ylab = '£',xlab = '', ylim = range(0,100),cex.axis=0.75,cex.lab=1)
+lines(Y[2,2:nPeriods], type="l", lty = 2, lwd = 2, col=4)
+legend("right",c("Baseline","Technical progress"),  bty = "n", cex = 1, lty=c(1,2), lwd=c(2,2), col = c("purple",4), box.lty=0)
+
+#Capital stock with technical progress
+plot(K[1,2:nPeriods], type="l", lty = 1, lwd = 2, col=3, font.main=1,cex.main=1,main="d) Capital stock: technical progress",ylab = '£',xlab = '', ylim = range(0,200),cex.axis=0.75,cex.lab=1)
+lines(K[2,2:nPeriods], type="l", lty = 2, lwd = 2, col=8)
+legend("right",c("Baseline","Technical progress"),  bty = "n", cex = 1, lty=c(1,2), lwd=c(2,2), col = c(3,8), box.lty=0)
