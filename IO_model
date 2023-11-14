@@ -1,0 +1,64 @@
+#A simple input-output model
+
+#Made by MVP, 29th September 2022
+
+############################################################################
+
+#STEP 1: Clear the workspace
+
+#Clear all
+rm(list=ls(all=TRUE))
+
+############################################################################
+
+#TOTAL OUTPUT
+
+#Create a 2x2 matrix of technical coefficients, A=(a11,a12,a21,a22)
+A = t(matrix(data=c(0.3,0.2,0.1,0.4),nrow=2,ncol=2))
+
+#Show matrix A
+A
+
+#Create the column vector of final demand, d
+d <- matrix(data=c(4,5),nrow=2,ncol=1)
+
+#Show vector d
+d
+
+#Create a 2x2 identity matrix, I
+I <- diag(2)
+
+#Create the column vector of total output, x
+x <- matrix(data=c(0,0),nrow=2,ncol=1)
+
+#Calculate total output by using the Leontief inverse matrix
+x <- solve(I-A) %*% d
+
+#Show total output
+x
+
+############################################################################
+
+#REPRODUCTION PRICES
+
+#Define wage rate and the costing margin
+w = 1
+mu = 0.8
+
+#Define labour coefficients (inverse of labour productivity)
+l = matrix(data=c(0.5,0.5),nrow=2,ncol=1)
+
+#Create the column vector of prices
+p <- matrix(data=c(0,0),nrow=2,ncol=1)
+
+#Calculate reproduction prices
+for (iter in 1:100){
+  p[1]  =  ((p[2]*A[2])*(1+mu) + w*l[1]) /(1 - A[1]*(1+mu))
+  p[2]  =  ((p[1]*A[3])*(1+mu) + w*l[2]) /(1 - A[4]*(1+mu))
+  }
+
+#Note: p[1] = (p[1]*A[1] + p[2]*A[2])*(1+mu) + w*l[1]
+#      p[2] = (p[1]*A[3] + p[2]*A[4])*(1+mu) + w*l[2]
+
+#Display prices
+p
