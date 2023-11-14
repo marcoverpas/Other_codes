@@ -1,0 +1,80 @@
+'LVMODEL
+'created by Marco Veronese Passarella, June 3, 2019
+'Description: simple prey-predator (or Lotka-Volterra) model
+
+'Create workfile
+wfcreate(wf = superecom65) u 1 3000
+
+'Create endogenous variables
+series pred 'stock of predators (solution=gammal/betal)
+series prey 'prey (solution=gammay/betay)
+series g_pred 'growth rate of predators
+series g_prey 'growth rate of prey
+series pred_a 'shock to predators
+series prey_a 'shock to prey
+
+'Assign values to coefficients
+series gamma_pred = 0.01 'degrowth rate of predators with no prey
+series gamma_prey = 0.01 'growth rate of prey with no predators
+series beta_pred = 0.000001 'sensitivity of predators growth to prey
+series beta_prey = 0.000001 'sensitivity of prey growth to predators
+
+'Assign initial values to variables
+pred=gamma_pred/beta_pred
+prey=gamma_prey/beta_prey
+pred_a=0
+prey_a=0
+
+'Set sampl
+smpl @all
+
+'Create model
+model lvmodel
+
+'Create system of equations
+lvmodel.append g_prey = (gamma_prey - beta_prey*pred(-1))
+lvmodel.append g_pred = (-gamma_pred + beta_pred*prey(-1))
+lvmodel.append prey = prey(-1)*(1+g_prey) + prey_a
+lvmodel.append pred = pred(-1)*(1+g_pred) + pred_a
+
+' Select the baseline Scenario
+lvmodel.scenario "baseline"
+
+'Define the sample
+smpl @all
+
+'Solve the model
+lvmodel.solve(i=a, s=d, d=d)
+
+'Shock to prey
+lvmodel.scenario "scenario 1"
+lvmodel.override prey_a 
+copy prey_a prey_a_1
+smpl 15 @last
+prey_a_1 = 1 'from 0 
+smpl @all
+lvmodel.solve
+
+'Higher shock to prey
+lvmodel.scenario(n) "scenario 2"
+lvmodel.override prey_a 
+copy prey_a prey_a_2
+smpl 15 @last
+prey_a_2 = 25 'from 0 
+smpl @all
+lvmodel.solve
+
+
+'Plot prey and predators over time under baseline and after shock 1
+line prey_0 pred_0 prey_1 pred_1
+
+'Plot prey and predators over time under baseline and after shock 2
+line prey_0 pred_0 prey_2 pred_2
+
+'Plot phase diagram of shock 1
+smpl @all
+scat prey_1 pred_1
+
+'Plot phase diagram of shock 2
+smpl @all
+scat prey_2 pred_2 
