@@ -1,0 +1,107 @@
+#The Susceptible-Infected-Recovered (SIR) model for spread of disease
+
+#Alternative version
+
+#Made by MVP, 11th March 2020
+
+############################################################################
+
+#STEP 1: Clear the workspace
+
+#Clear all
+rm(list=ls(all=TRUE))
+
+############################################################################
+
+#STEP 2: Define the number of periods and scenarios
+
+#Number of periods
+nPeriods = 150
+
+#Number of scenarios
+nScenarios=4 
+
+############################################################################
+
+#STEP 3: Create variables and set their intial values
+N=matrix(data=60550000,nrow=nScenarios,ncol=nPeriods)       #Total population
+S=matrix(data=N,nrow=nScenarios,ncol=nPeriods)              #Susceptible
+I=matrix(data=3,nrow=nScenarios,ncol=nPeriods)              #Infected
+R=matrix(data=0,nrow=nScenarios,ncol=nPeriods)              #Recovered
+s=matrix(data=S/N,nrow=nScenarios,ncol=nPeriods)            #Percentage of susceptible
+inf=matrix(data=I/N,nrow=nScenarios,ncol=nPeriods)          #Percentage of infected 
+r=matrix(data=R/N,nrow=nScenarios,ncol=nPeriods)            #Percentage of recovered 
+
+############################################################################
+
+#STEP 4: Set values for parameters and exogenous variables 
+period=matrix(data=5,nrow=nScenarios,ncol=nPeriods)         #Average period of infectiouness
+days=matrix(data=2,nrow=nScenarios,ncol=nPeriods)           #Days it takes for each infected to make an infecting contact
+b=matrix(data=1/days,nrow=nScenarios,ncol=nPeriods)         #Contacts per day
+k=matrix(data=1/period,nrow=nScenarios,ncol=nPeriods)       #Recovered to infected ratio
+
+############################################################################
+
+# STEP 5: CREATE THE MODEL
+
+#Select scenarios
+for (j in 1:nScenarios){
+  
+  #Define the time loop
+  for (i in 2:nPeriods){
+    
+    #Define iterations
+    for (iterations in 1:100){
+      
+      #Define alternative scenario 2
+      if (j==2){
+        days[2,i]=1
+      }
+      
+      #Define alternative scenario 3
+      if (j==3){
+        days[3,i]=1.5
+      }
+      
+      #Define alternative scenario 4
+      if (j==4){
+        days[4,i]=2.5
+      }
+      
+      #SIR MODEL (ALTERNATIVE) EQUATIONS      
+      
+      #Define key ratios
+      b[j,i]=1/days[j,i]
+      k[j,i]=1/period[j,i]
+      
+      #Absolute values
+      S[j,i] = S[j,i-1] - b[j,i]*S[j,i]*I[j,i]/N[j,i]
+      R[j,i] = R[j,i-1] + k[j,i]*I[j,i]
+      I[j,i] = I[j,i-1] + b[j,i]*S[j,i]*I[j,i]/N[j,i] - k[j,i]*I[j,i]
+      N[j,i] = S[j,i] + R[j,i] + I[j,i] 
+      
+      #Percentages
+      s[j,i] = S[j,i]/N[j,i]
+      r[j,i] = R[j,i]/N[j,i]
+      inf[j,i] = I[j,i]/N[j,i]
+      
+    }
+  }
+}
+
+############################################################################
+
+# STEP 6: PLOT RESULTS
+
+#Plot relative values
+plot(s[1,1:nPeriods], type="l", lty = 1, lwd = 2, col=4, font.main=1,cex.main=1,main="Fig 1. Spread of virus (% of population)",ylab = '%',xlab = '', ylim = range(0,1),cex.axis=0.75,cex.lab=1)
+lines(r[1,1:nPeriods], type="l", lty = 1, lwd = 2, col=3)
+lines(inf[1,1:nPeriods], type="l", lty = 1, lwd = 2, col="purple")
+legend("right",c("Susceptible","Recovered","Infected"),  bty = "n", cex = 1, lty=c(1,1,1), lwd=c(2,2,2), col = c(4,3,"purple"), box.lty=0)
+
+#Compare alternative scenarios
+plot(inf[4,1:nPeriods], type="l", lty = 1, lwd = 2, col=2, font.main=1,cex.main=1,main="Fig 2. Percentage of infected under \n alternative scenarios",ylab = '%',xlab = '', ylim = range(0,0.45),cex.axis=0.75,cex.lab=1)
+lines(inf[1,1:nPeriods], type="l", lty = 1, lwd = 2, col="purple")
+lines(inf[3,1:nPeriods], type="l", lty = 1, lwd = 2, col=6)
+lines(inf[2,1:nPeriods], type="l", lty = 1, lwd = 2, col="orange")
+legend("topright",c("0.4 contacts per day","0.5 contacts per day","0.75 contacts per day","1 contact per day"),  bty = "n", cex = 1, lty=c(1,1,1,1), lwd=c(2,2,2,2), col = c(2,"purple",6,"orange"), box.lty=0)
