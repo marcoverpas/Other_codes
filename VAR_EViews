@@ -1,0 +1,37 @@
+'Reduced form DSGE model (VAR)
+'Created by Marco Veronese Passarella: 6 March 2019
+
+
+'Create workfile
+wfcreate(wf=varmodel) q 1981q1 2018q3
+
+
+'Upload time series
+read(b2) "C:\ ... \data_var.xls" Y P R  'Change this    
+
+
+
+'Take log of output
+series LY = log(Y)
+
+
+'Detrend output log using HP filter, where LYN = trend and YG = cycle                                                                                                                                                                                                                                                                                                                                                                                  
+LY.hpf(lambda=1200) LYN @ YG                
+
+
+'Estimate a VAR
+var varmodel.ls 1 2 YG P R
+
+
+'Create series of residuals
+varmodel.makeresids YG_res P_res R_res
+
+
+'Predict future values (from 2017q3 to 2018q3)
+varmodel.forecast(m) _f _se
+
+
+'Display impulse response functions (options: g = combined graphs, m = multiple graphs, t = table, a = accumulate impulse responses)
+varmodel.impulse(10,m,se=mc,rep=100) YG P R      
+
+'Note: se = a means analytic standard errors, while se = mc means Monte Carlo standard errors
