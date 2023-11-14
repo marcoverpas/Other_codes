@@ -1,0 +1,97 @@
+#LVMODEL
+#created by Marco Veronese Passarella, May 31, 2019
+
+#STEP 1: Clear the workspace and define the number of periods and scenarios
+rm(list=ls(all=TRUE))
+#Number of periods
+nPeriods = 3000
+#Number of scenarios
+nScenarios=3 
+
+#STEP 2: Assign values to coefficients
+gamma_pred = 0.01 #degrowth rate of predators with no prey
+gamma_prey = 0.01 #growth rate of prey with no predators
+beta_pred = 0.000001 #sensitivity of predators growth to prey
+beta_prey = 0.000001 #sensitivity of prey growth to predators
+
+#STEP 3: Create endogenous variables
+pred=matrix(data=10000,nrow=nScenarios,ncol=nPeriods) #predators (solution=gamma_pred/beta_pred)
+prey=matrix(data=10000,nrow=nScenarios,ncol=nPeriods) #prey (solution=gamma_prey/beta_prey)
+g_pred=matrix(data=0,nrow=nScenarios,ncol=nPeriods) #growth rate of predators
+g_prey=matrix(data=0,nrow=nScenarios,ncol=nPeriods) #growth rate of prey
+pred_a=matrix(data=0,nrow=nScenarios,ncol=nPeriods) #shock to predators
+prey_a=matrix(data=0,nrow=nScenarios,ncol=nPeriods) #shock to prey
+
+#STEP 4: Create loops and run the model
+#Choose scenario
+for (j in 1:nScenarios){
+  #Define time loop
+  for (i in 2:nPeriods){
+    #Define iterations
+    for (iterations in 1:100){
+      #Introduce shock 1 (to prey)
+      if (i>=15 && j==2){
+        prey_a[j,i]=1           
+      }
+
+      #Introduce shock 2 (to prey)
+      if (i>=15 && j==3){
+        prey_a[j,i]=25           
+      }
+      
+      g_prey[j,i] = (gamma_prey - beta_prey*pred[j,i-1])
+      g_pred[j,i] = (-gamma_pred + beta_pred*prey[j,i-1])
+      prey[j,i] = prey[j,i-1]*(1+g_prey[j,i]) + prey_a[j,i]
+      pred[j,i] = pred[j,i-1]*(1+g_pred[j,i]) + pred_a[j,i]
+
+    }
+    
+  }
+
+}
+
+#STEP 5: Plot figures
+
+#Plot prey and predators over time under baseline and after shock 1
+plot(prey[2,2:3000],type="l",col="3",lwd=2,lty=4,font.main=1,cex.main=0.75,main="Figure 1: prey and predators (baseline and shock 1)",ylab = '',xlab = '',ylim=range(9850,10250))
+lines(pred[2,2:3000],type="l",lwd=2,lty=2,col="1")
+lines(pred[1,2:3000],type="l",lwd=2,lty=2,col="2")
+par(xpd=TRUE)
+par(xpd=TRUE)
+legend("bottomleft",c("prey after shock","predators after shock","prey and predators baseline value"),  bty = "n", cex = 0.7, lty=c(4,2,3), lwd=c(2,2,2), col = c(3,1,2), box.lwd=0)
+
+#Plot prey and predators over time under baseline and after shock 1
+plot(prey[3,2:3000],type="l",col="3",lwd=2,lty=4,font.main=1,cex.main=0.75,main="Figure 2: prey and predators (baseline and shock 2)",ylab = '',xlab = '',ylim=range(8500,15000))
+lines(pred[3,2:3000],type="l",lwd=2,lty=2,col="1")
+lines(pred[1,2:3000],type="l",lwd=2,lty=2,col="2")
+par(xpd=TRUE)
+par(xpd=TRUE)
+legend("topright",c("prey after shock","predators after shock","prey and predators baseline value"),  bty = "n", cex = 0.7, lty=c(4,2,3), lwd=c(2,2,2), col = c(3,1,2), box.lwd=0)
+
+#Plot phase diagram after shock 1
+plot(prey[2,],pred[2,],type="l",col="4",lwd=2,lty=4,font.main=1,cex.main=0.75,main="Figure 3: phase diagram (shock 1)",ylab = 'predators',xlab = 'prey',xlim=range(9900,10100),ylim=range(10000,10200))
+segments(x0=10000, # Value from x (initial)
+         x1=10000, # Value to x (final)
+         y0=10000, # Value from y (initial)
+         y1=10200, # Value to y (final)
+         col=1,lty=2,lwd=1)
+segments(x0=9900, # Value from x (initial)
+         x1=10100, # Value to x (final)
+         y0=10100, # Value from y (initial)
+         y1=10100, # Value to y (final)
+         col=1,lty=2,lwd=1)
+par(xpd=TRUE)
+
+#Plot phase diagram after shock 2
+plot(prey[3,],pred[3,],type="l",col="4",lwd=2,lty=4,font.main=1,cex.main=0.75,main="Figure 4: phase diagram (shock 2)",ylab = 'predators',xlab = 'prey')
+segments(x0=10000, # Value from x (initial)
+         x1=10000, # Value to x (final)
+         y0=9900, # Value from y (initial)
+         y1=14800, # Value to y (final)
+         col=1,lty=2,lwd=1)
+segments(x0=8500, # Value from x (initial)
+         x1=12300, # Value to x (final)
+         y0=12500, # Value from y (initial)
+         y1=12500, # Value to y (final)
+         col=1,lty=2,lwd=1)
+par(xpd=TRUE)
