@@ -1,0 +1,102 @@
+#####################################################
+#SCM model for Italy (GDP per capita, quarterly)
+#Last change: 11 October 2021
+#####################################################
+
+#Clear all
+rm(list=ls(all=TRUE))
+
+#Upload libraries
+library("readr")
+library("Synth")
+
+#Load data
+data<-read.csv("https://www.dropbox.com/s/xs18elb701n0jh3/scm_data_web.csv?dl=1")
+data<-as.data.frame(data)
+
+#####################################################
+#Create matrices from panel data that provide inputs for synth()
+dataprep.out<-
+  dataprep(
+    foo = data,
+    predictors = c("p","r"),
+    predictors.op = c("mean"),
+    dependent = c("pr"),
+    unit.variable = c("unit"),
+    time.variable = c("year"),
+    special.predictors = list(
+      list("pr", 1, "mean"),
+      list("pr", 2, "mean"),
+      list("pr", 3, "mean"),
+      list("pr", 4, "mean"),
+      list("pr", 5, "mean"),
+      list("pr", 6, "mean"),
+      list("pr", 7, "mean"),
+      list("pr", 8, "mean"),
+      list("pr", 9, "mean"),
+      list("pr", 10, "mean"),
+      list("pr", 11, "mean"),
+      list("pr", 12, "mean"),
+      list("pr", 13, "mean"),
+      list("pr", 14, "mean"),
+      list("pr", 15, "mean"),
+      list("pr", 16, "mean"),
+      list("pr", 17, "mean"),
+      list("pr", 18, "mean"),
+      list("pr", 19, "mean"),
+      list("pr", 20, "mean"),
+      list("pr", 21, "mean"),
+      list("pr", 22, "mean"),
+      list("pr", 23, "mean")
+      ),
+    treatment.identifier = 8,
+    controls.identifier = c(1,4,6,12,14,15,16,17,20),
+    time.predictors.prior = c(1:24),   #Notes: 1 = 1996q1, 24 = 2001q4
+    time.optimize.ssr = c(1:24),       #Notes: 1 = 1996q1, 24 = 2001q4
+    time.plot = c(1:44)                #Notes: 44 = 2006q4
+  )
+
+#Run the synth command to identify the weights that create the best possible SC unit for the treated
+synth.out <- synth(dataprep.out)
+
+#####################################################
+#Sum up the results
+
+#1) Unit weights
+round(synth.out$solution.w,2)
+
+#2) Predictor weights
+synth.out$solution.v
+
+#Period by period discrepancies between the treated unit and its synthetic control unit
+gaps<- dataprep.out$Y1plot-(
+  dataprep.out$Y0plot%*%synth.out$solution.w
+) ; gaps
+
+#####################################################
+#Display results
+
+#1) Summary tables
+synth.tables <- synth.tab(
+  dataprep.res = dataprep.out,
+  synth.res = synth.out)
+print(synth.tables)
+
+#2) Plots
+
+#2.1) Plot in levels (treated and synthetic)
+path.plot(dataprep.res = dataprep.out,synth.res = synth.out,Ylab="Levels")
+
+#2.2) Plot the gaps (treated - synthetic)
+gaps.plot(dataprep.res = dataprep.out,synth.res = synth.out,Ylab="Gaps")
+
+#2.3) A more detailed plot of levels
+mycol3 <- rgb(0,255,0, max = 255, alpha = 50, names = "mygreen")
+x=c("1996q1","1996q2","1996q3","1996q4","1997q1","1997q2","1997q3","1997q4","1998q1","1998q2","1998q3","1998q4","1999q1","1999q2","1999q3","1999q4","2000q1","2000q2","2000q3","2000q4","2001q1","2001q2","2001q3","2001q4","2002q1","2002q2","2002q3","2002q4","2003q1","2003q2","2003q3","2003q4","2004q1","2004q2","2004q3","2004q4","2005q1","2005q2","2005q3","2005q4","2006q1","2006q2","2006q3","2006q4")
+plot(data$pr[422:465], xaxt='n', type="l",col=1,lty=1,lwd=3,ylim=range(32,40),font.main=1,cex.main=1,cex.axis=1,cex.lab=1,main="GDP per head (quarterly data)",ylab = 'GDP per head, USD, const.p., PPP', xlab = '')
+rect(xleft=22,xright=26,ybottom=0.0,ytop=580,col=mycol3,border=NA)
+abline(v=24,col=1,lty=3,lwd=1)
+lines(data$pr[422:465]-gaps,col=4,lty=2,lwd=3)
+legend("topleft",legend=c("Observed","Synthetic"),bty = "n", cex = 1, lty=c(1,2), lwd=c(3,3), col = c(1,4), box.lwd=0)
+axis(side=1,at=1:44,labels=x,cex.axis=1,mgp = c(1, 2, 0))
+#####################################################
